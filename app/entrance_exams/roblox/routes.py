@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -9,6 +9,9 @@ from app.quizes.communication import send_random_poll, assign_lesson_questions, 
 from app.users.services import UserService
 
 router = Router()
+router.message.filter(
+    F.chat.type == "private"
+)
 
 message_state = {}
 delete_poll = {}
@@ -26,6 +29,7 @@ class OrderQuestionnaire(StatesGroup):
 class Quiz(StatesGroup):
     first = State()
     second = State()
+    second_wait_message = State()
 
 
 class Complete(StatesGroup):
@@ -33,6 +37,7 @@ class Complete(StatesGroup):
 
 
 @router.message(Command("roblox"))
+@router.message(F.chat.type == 'private')
 async def cmd_food(message: Message, state: FSMContext):
     await message.answer(
         text="Вступительное тестирование состоит из 3х частей:\n"
@@ -148,11 +153,12 @@ async def food_size_chosen(message: Message, state: FSMContext):
 @router.poll_answer(Quiz.first)
 async def quiz_first(poll: PollAnswer, state: FSMContext):
     await process_poll_answer(poll.user.id, poll.option_ids[0])
+    await state.set_state(Quiz.second_wait_message)
 
     if not await send_random_poll(poll.bot, poll.user.id):
         await assign_lesson_questions(poll.user.id, 'roblox_exam_2')
         await send_random_poll(poll.bot, poll.user.id)
-        await state.set_state(Quiz.second)
+
 
 
 @router.poll_answer(Quiz.second)

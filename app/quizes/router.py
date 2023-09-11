@@ -8,6 +8,9 @@ from app.quizes.dao_quizes import QuizService
 from app.users.services import UserService
 
 router = Router()
+router.message.filter(
+    F.chat.type == "private"
+)
 
 
 @router.message(Command("start"))
@@ -42,7 +45,8 @@ async def cmd_start(message: Message):
 
     attempt_id = question.id
     if question.question.type == 'poll':
-        question = (await QuizService.get_question(id=question.question.id)).to_poll()
+        question = (
+            await QuizService.get_question(id=question.question.id)).to_poll()
         await UserService.update(
             user.id,
             state='waiting answer poll',
