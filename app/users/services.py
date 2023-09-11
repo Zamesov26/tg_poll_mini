@@ -34,7 +34,7 @@ class UserService:
             await session.commit()
 
     @classmethod
-    async def get_user(cls, user_id: int):
+    async def get_user(cls, user_id: int) -> Optional[Users]:
         async with async_session_maker() as session:
             stmt = select(Users).filter_by(id=user_id)
 

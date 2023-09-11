@@ -13,7 +13,20 @@ async def send_random_poll(bot, user_id) -> bool:
     )
     if attempt:
         question = (
-            await QuizService.get_question(id=attempt.question.id)).to_poll()
+            await QuizService.get_question(id=attempt.question.id)
+        ).to_poll()
+
+        if question.get('type') == 'text':
+            message = await bot.send_message(
+                user_id,
+                question.get('question', 'Сообщения не найдено')
+            )
+            await UserService.update(
+                user_id,
+                data={'attempt_id': attempt.id,
+                      'last_message': message.message_id}
+            )
+            return True
 
         new_poll = await bot.send_poll(
             chat_id=user_id,
@@ -55,3 +68,17 @@ async def process_poll_answer(user_id, user_answer_id):
 
     await UserService.update_question_attempt(user.data.get('attempt_id'),
                                               **data)
+
+
+async def process_text_answer(user_id, message):
+    user = await UserService.get_user(user_id)
+    await message.bot.delete_message(
+        message_id=user.data.get('last_message'),
+        chat_id=message.chat.id
+    )
+    await UserService.update_question_attempt(
+        user.data['attempt_id'],
+        check_required=True,
+        expectation_date=datetime.utcnow(),
+        text_answer=message.text
+    )
