@@ -1,7 +1,7 @@
 для работы программы необходимо создать файла 
 .env
 и передать внутрь ключ toeken telegram api
-TG_API_TOKEN=6172056791:AAEZb6_pHSuzaNLTb7bDJVkAs0rjQ2EgSaY
+TG_API_TOKEN=...
 
 а также информацию о подключении к postgresql
 DB_HOST=...
