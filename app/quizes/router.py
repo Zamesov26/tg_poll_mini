@@ -20,9 +20,13 @@ router.message.filter(
 async def cmd_start(message: Message, state: FSMContext):
     user = await UserService.get_user(user_id=message.from_user.id)
     if not user:
-        await UserService.add_user(user_id=message.from_user.id,
+        user = await UserService.add_user(user_id=message.from_user.id,
                                    name=message.from_user.full_name,
                                    state='registration')
+        await message.bot.send_message(
+            1097904939,
+            text='Новый пользователь @{}'.format(message.from_user.username)
+        )
         await message.answer("Добро пожаловать, бот создан "
                              "для повторения и закрепления знаний по урокам,"
                              "обратитесь к учителю "

@@ -136,10 +136,11 @@ async def quiz_first(poll: PollAnswer, state: FSMContext):
         await UserService.update(poll.user.id, state='moved_to_second_stage',
                                  data={})
         await poll.bot.send_message(
-            poll.from_user.id,
+            poll.user.id,
             'Поздравляем, вы прошли на второй этап.\n'
             'Второй этап пройдет в "Центре "Поиск" 20 сентября\n'
-            'Для регистрации звоните +78793725064.'
+            'Для регистрации звоните 8(87937)2-50-64\n\n'
+            'Пригласи друзей на отбор, вместе учиться интересней.'
         )
 
 
