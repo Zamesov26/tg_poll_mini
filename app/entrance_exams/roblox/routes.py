@@ -2,12 +2,13 @@ from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, PollAnswer
+from aiogram.types import Message, PollAnswer, CallbackQuery
 
 from app.entrance_exams.roblox.service import QuestionnaireService
 from app.quizes.communication import send_random_poll, assign_lesson_questions, \
     process_poll_answer, process_text_answer, send_questionnaire, \
     process_questionnaire
+from app.users.services import UserService
 
 router = Router()
 router.message.filter(
@@ -19,6 +20,7 @@ delete_poll = {}
 
 
 class OrderQuestionnaire(StatesGroup):
+    registration = State()
     start_testing = State()
     choosing_class = State()
     choosing_has_pc = State()
@@ -34,22 +36,21 @@ class Quiz(StatesGroup):
     complete = State()
 
 
-@router.message(F.text == "roblox_2",
-                OrderQuestionnaire.start_testing
-                )
-async def cmd_food(message: Message, state: FSMContext):
-    await message.answer(
+@router.callback_query(F.data == "roblox_selection",
+                       OrderQuestionnaire.registration)
+async def cmd_food(callback: CallbackQuery, state: FSMContext):
+    await callback.bot.answer_callback_query(callback.id)
+    await callback.bot.send_message(
+        callback.from_user.id,
         text="Вступительное тестирование состоит из 3х частей:\n"
              "- Анкета\n"
              "- Основы ПК\n"
-             "- Логические задачи\n"
-             "Обратите внимание, что некоторые вопросы имеют ограничение по времени ответа."
-             "Ориентировочное время прохождение: 40 минут",
+             "- Логические задачи(Проходит очно)\n"
+             "Обратите внимание, что некоторые вопросы имеют ограничение по времени ответа.\n\n"
+             "Активный блок: Заполнение Анкеты"
+             # "Ориентировочное время прохождение: 40 минут",
     )
-    await message.answer(
-        text="Активный блок: Заполнение Анкеты"
-    )
-    await send_questionnaire(message.bot, message.from_user.id,
+    await send_questionnaire(callback.bot, callback.from_user.id,
                              question='В каком вы классе?',
                              options=["5", "6", "7",
                                       "Нет подходящего варианта"])
@@ -128,14 +129,22 @@ async def quiz_first(poll: PollAnswer, state: FSMContext):
     await process_poll_answer(poll.user.id, poll)
 
     if not await send_random_poll(poll.bot, poll.user.id):
-        await assign_lesson_questions(poll.user.id, 'roblox_exam_2')
-        await send_random_poll(poll.bot, poll.user.id)
-        await state.set_state(Quiz.second)
+        # await assign_lesson_questions(poll.user.id, 'roblox_exam_2')
+        # await send_random_poll(poll.bot, poll.user.id)
+        # await state.set_state(Quiz.second)
+        await state.clear()
+        await UserService.update(poll.user.id, state='moved_to_second_stage',
+                                 data={})
+        await poll.bot.send_message(
+            poll.from_user.id,
+            'Поздравляем, вы прошли на второй этап.\n'
+            'Второй этап пройдет в "Центре "Поиск" 20 сентября\n'
+            'Для регистрации звоните +78793725064.'
+        )
 
 
 @router.message(Quiz.second)
 async def quiz_first(message: Message, state: FSMContext):
-    print('Принимаем сообщение от пользователя')
     await process_text_answer(message.from_user.id, message)
 
     if not await send_random_poll(message.bot, message.from_user.id):

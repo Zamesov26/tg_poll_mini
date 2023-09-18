@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, PollAnswer
+from aiogram.types import Message, PollAnswer, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.entrance_exams.roblox.routes import OrderQuestionnaire
 from app.quizes.dao_quizes import QuizService
@@ -22,11 +23,18 @@ async def cmd_start(message: Message, state: FSMContext):
         await UserService.add_user(user_id=message.from_user.id,
                                    name=message.from_user.full_name,
                                    state='registration')
-        await state.set_state(OrderQuestionnaire.start_testing)
         await message.answer("Добро пожаловать, бот создан "
                              "для повторения и закрепления знаний по урокам,"
                              "обратитесь к учителю "
                              "для добавления в группу или введите код.")
+
+        await state.set_state(OrderQuestionnaire.registration)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text='Пройти отбор',
+                                         callback_data="roblox_selection"))
+        await message.answer(
+            'Открыт набор на бюджетный курс "Создание игр в Roblox"',
+            reply_markup=builder.as_markup())
         return
 
     if user.state == 'registration':
