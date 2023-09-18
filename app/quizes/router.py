@@ -2,8 +2,10 @@ from datetime import datetime, timedelta
 
 from aiogram import Router, F
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, PollAnswer
 
+from app.entrance_exams.roblox.routes import OrderQuestionnaire
 from app.quizes.dao_quizes import QuizService
 from app.users.services import UserService
 
@@ -13,13 +15,14 @@ router.message.filter(
 )
 
 
-@router.message(Command("start"))
-async def cmd_start(message: Message):
+@router.message(Command("start"), )
+async def cmd_start(message: Message, state: FSMContext):
     user = await UserService.get_user(user_id=message.from_user.id)
     if not user:
         await UserService.add_user(user_id=message.from_user.id,
                                    name=message.from_user.full_name,
                                    state='registration')
+        await state.set_state(OrderQuestionnaire.start_testing)
         await message.answer("Добро пожаловать, бот создан "
                              "для повторения и закрепления знаний по урокам,"
                              "обратитесь к учителю "
@@ -69,18 +72,18 @@ async def cmd_start(message: Message):
         await message.answer(question.question.text)
 
 
-@router.poll_answer()
-async def poll_handler(poll: PollAnswer):
-    user = await UserService.get_user(user_id=poll.user.id)
-    data = {}
-    if user.data['correct_option_id'] == poll.option_ids[0]:
-        data['is_passed'] = True
-    else:
-        data['expectation_date'] = datetime.utcnow() + timedelta(days=1)
-
-    await UserService.update_question_attempt(user.data.get('attempt_id'),
-                                              **data)
-    await UserService.update(user.id, state='ready', data={})
+# @router.poll_answer()
+# async def poll_handler(poll: PollAnswer):
+#     user = await UserService.get_user(user_id=poll.user.id)
+#     data = {}
+#     if user.data['correct_option_id'] == poll.option_ids[0]:
+#         data['is_passed'] = True
+#     else:
+#         data['expectation_date'] = datetime.utcnow() + timedelta(days=1)
+#
+#     await UserService.update_question_attempt(user.data.get('attempt_id'),
+#                                               **data)
+#     await UserService.update(user.id, state='ready', data={})
 
 
 @router.message(F.text)

@@ -15,6 +15,7 @@ from app.database import Base
 from app.quizes.models import Questions, Answers
 from app.users.models import Users, UserQuestionAttempts
 from app.lessons.models import Lessons
+from app.entrance_exams.roblox.models import Questionnaire
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
