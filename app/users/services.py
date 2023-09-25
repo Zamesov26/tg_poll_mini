@@ -42,6 +42,14 @@ class UserService:
             return result.scalars().one_or_none()
 
     @classmethod
+    async  def get_users(cls, **filters) -> list[Users]:
+        async with async_session_maker() as session:
+            stmt = select(Users).filter_by(**filters)
+
+            result = await session.execute(stmt)
+            return result.scalars().all()
+
+    @classmethod
     async def assign_questions(cls, user_id: int, questions: List[int]):
         async with async_session_maker() as session:
             for question_id in questions:

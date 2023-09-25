@@ -5,6 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, PollAnswer, CallbackQuery
 
 from app.entrance_exams.roblox.service import QuestionnaireService
+from app.entrance_exams.roblox.user_answer import ROBLOX_MESSAGE
 from app.quizes.communication import send_random_poll, assign_lesson_questions, \
     process_poll_answer, process_text_answer, send_questionnaire, \
     process_questionnaire
@@ -30,6 +31,18 @@ class OrderQuestionnaire(StatesGroup):
     get_text_expectations = State()
 
 
+@router.message(Command("send_newsletter"),
+                F.from_user.id)
+async def newsletter(message: Message):
+    users = await UserService.get_users(state='registration')
+    for user in users:
+        print(user)
+        # await message.bot.send_message(
+        #     user.id,
+        #     text=ROBLOX_MESSAGE
+        # )
+
+
 class Quiz(StatesGroup):
     first = State()
     second = State()
@@ -48,7 +61,7 @@ async def cmd_food(callback: CallbackQuery, state: FSMContext):
              "- Логические задачи(Проходит очно)\n"
              "Обратите внимание, что некоторые вопросы имеют ограничение по времени ответа.\n\n"
              "Активный блок: Заполнение Анкеты"
-             # "Ориентировочное время прохождение: 40 минут",
+        # "Ориентировочное время прохождение: 40 минут",
     )
     await send_questionnaire(callback.bot, callback.from_user.id,
                              question='В каком вы классе?',
