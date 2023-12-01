@@ -1,6 +1,6 @@
 .idea/
 __pycache__/
-./.env
-./.test.env
+.env
+.test.env
 temp.py
 app/test_base*
